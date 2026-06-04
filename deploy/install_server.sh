@@ -41,6 +41,18 @@ if ! command -v git >/dev/null 2>&1; then
   exit 1
 fi
 
+if [ -x ".venv/bin/python" ]; then
+  if ! .venv/bin/python - <<'PY'
+import sys
+raise SystemExit(0 if sys.version_info >= (3, 9) else 1)
+PY
+  then
+    echo "Existing virtualenv uses an old Python: $(.venv/bin/python --version)"
+    echo "Recreating .venv with $("$PYTHON_BIN" --version)."
+    rm -rf .venv
+  fi
+fi
+
 "$PYTHON_BIN" -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
