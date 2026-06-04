@@ -13,6 +13,32 @@
 
 ## 服务器准备
 
+先安装基础环境：
+
+```bash
+dnf install -y git python3 python3-pip gcc python3-devel
+```
+
+如果安装依赖时报 `No matching distribution found for akshare`，通常是服务器默认 Python 太老。先看版本：
+
+```bash
+python3 --version
+```
+
+如果低于 Python 3.9，优先安装新版 Python：
+
+```bash
+dnf install -y python3.11 python3.11-pip python3.11-devel
+```
+
+然后用新版 Python 安装项目：
+
+```bash
+PYTHON_BIN=python3.11 bash deploy/install_server.sh
+```
+
+如果你的系统仓库里没有 `python3.11`，把终端报错发出来，再换下一种安装方式。
+
 部署前建议先跑一次环境检查：
 
 ```bash
@@ -117,7 +143,7 @@ journalctl -u a-share-review.service -n 100 --no-pager
 也可以使用 cron：
 
 ```cron
-20 15 * * 1-5 cd /path/to/a-share-review && /bin/zsh scripts/run_daily.sh >> logs/cron.log 2>&1
+20 15 * * 1-5 cd /path/to/a-share-review && /bin/bash scripts/run_daily.sh >> logs/cron.log 2>&1
 ```
 
 ## 部署注意事项
