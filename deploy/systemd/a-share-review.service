@@ -1,0 +1,12 @@
+[Unit]
+Description=A-share review daily data collector
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=YOUR_USER
+WorkingDirectory=/path/to/a-share-review
+Environment=TZ=Asia/Shanghai
+Environment=PATH=/path/to/a-share-review/.venv/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/bin/zsh scripts/run_daily.sh

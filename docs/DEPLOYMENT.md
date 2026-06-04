@@ -1,0 +1,124 @@
+# 服务器部署说明
+
+## 适合的部署方式
+
+这个项目当前是命令行采集器，不需要常驻 Web 服务。
+
+推荐部署方式：
+
+1. 服务器安装 Python 环境。
+2. 克隆仓库。
+3. 安装依赖。
+4. 用 `systemd timer` 或 `cron` 定时执行 `scripts/run_daily.sh`。
+
+## 服务器准备
+
+部署前建议先跑一次环境检查：
+
+```bash
+bash deploy/server_check.sh
+```
+
+如果你想判断服务器资源够不够，跑：
+
+```bash
+bash deploy/server_audit.sh
+```
+
+这个脚本会列出内存、磁盘、进程、服务、Docker 容器和主要数据源网络连通性。
+
+如果仓库还没拉到服务器，可以参考：
+
+```text
+docs/CONNECT_SERVER.md
+```
+
+```bash
+git clone <your-repo-url> a-share-review
+cd a-share-review
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+手动试跑：
+
+```bash
+./scripts/run_daily.sh 2026-06-02
+```
+
+也可以直接运行安装脚本：
+
+```bash
+bash deploy/install_server.sh
+```
+
+生成文件会在：
+
+```text
+data/raw/
+data/processed/
+data/reports/
+```
+
+## systemd 定时运行
+
+项目提供模板：
+
+```text
+deploy/systemd/a-share-review.service
+deploy/systemd/a-share-review.timer
+```
+
+使用前先把 service 文件里的路径和用户改成你的服务器实际值。
+
+还要确认服务器时区。如果服务器不是北京时间，可以执行：
+
+```bash
+timedatectl
+```
+
+如果你希望定时器按北京时间触发，可以把服务器时区设为上海：
+
+```bash
+sudo timedatectl set-timezone Asia/Shanghai
+```
+
+复制到 systemd：
+
+```bash
+sudo cp deploy/systemd/a-share-review.service /etc/systemd/system/
+sudo cp deploy/systemd/a-share-review.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now a-share-review.timer
+```
+
+查看定时器：
+
+```bash
+systemctl list-timers a-share-review.timer
+```
+
+查看日志：
+
+```bash
+journalctl -u a-share-review.service -n 100 --no-pager
+```
+
+## cron 定时运行
+
+也可以使用 cron：
+
+```cron
+20 15 * * 1-5 cd /path/to/a-share-review && /bin/zsh scripts/run_daily.sh >> logs/cron.log 2>&1
+```
+
+## 部署注意事项
+
+- 服务器时区不一定是北京时间，脚本默认使用 `Asia/Shanghai` 生成日期。
+- 这个项目不是常驻服务，资源主要消耗发生在定时采集运行时。
+- 建议至少保留 1GB 可用内存和 3GB 可用磁盘空间。
+- 公共数据接口可能偶尔失败，失败项会写入 `data/raw/{trade_date}/errors.json`。
+- 生成数据默认不建议提交到 GitHub。
+- 如果服务器网络访问东方财富不稳定，行业和概念板块可能失败，但主流程不会中断。
+- 如果希望任一接口失败时直接返回失败状态，可以在命令后加 `--strict`。

@@ -1,0 +1,133 @@
+{
+  "updated_at": "2026-06-03",
+  "description": "A股复盘项目的数据源登记表。这里维护哪里取数据、取什么、输出到哪里。",
+  "sources": [
+    {
+      "id": "quant_tradedays",
+      "name": "自在量化交易日历",
+      "provider": "自在量化",
+      "access_type": "http_json",
+      "entry": "https://stock.ziruxing.com/open/tradedays",
+      "params": [],
+      "outputs": ["data/raw/{trade_date}/quant_tradedays.json"],
+      "data": ["最近交易日列表"],
+      "status": "enabled",
+      "notes": "用于判断当前日期是否为交易日。"
+    },
+    {
+      "id": "quant_uplimit_reason",
+      "name": "自在量化涨停原因",
+      "provider": "自在量化",
+      "access_type": "http_json",
+      "entry": "https://api.zizizaizai.com/v3/api/review/uplimit/reason",
+      "params": ["date1", "page", "page_size"],
+      "outputs": [
+        "data/raw/{trade_date}/quant_uplimit_reason_pages.json",
+        "data/raw/{trade_date}/quant_uplimit_reason_rows.json"
+      ],
+      "data": ["热门板块", "涨停股票", "涨停原因", "封单额", "成交额", "换手率", "连板信息"],
+      "status": "enabled",
+      "notes": "按板块分页，不是按股票分页。脚本默认每页 2 个板块，避免大包超时。"
+    },
+    {
+      "id": "quant_market_real_core",
+      "name": "自在量化核心个股实时行情",
+      "provider": "自在量化",
+      "access_type": "http_json",
+      "entry": "https://api.zizizaizai.com/open/market/real",
+      "params": ["symbols"],
+      "outputs": ["data/raw/{trade_date}/quant_market_real_core.json"],
+      "data": ["涨停核心个股实时价格", "昨收", "涨跌幅辅助计算"],
+      "status": "enabled",
+      "notes": "根据涨停原因里解析出的股票代码分批请求。"
+    },
+    {
+      "id": "akshare_a_spot_sina",
+      "name": "AkShare 新浪全市场 A 股行情",
+      "provider": "AkShare / 新浪",
+      "access_type": "python_function",
+      "entry": "akshare.stock_zh_a_spot",
+      "params": [],
+      "outputs": [
+        "data/raw/{trade_date}/akshare_a_spot_sina.json",
+        "data/processed/{trade_date}/market_breadth_summary.json"
+      ],
+      "data": ["全市场 A 股行情", "涨跌幅", "成交额", "上涨家数", "下跌家数", "平盘家数"],
+      "status": "enabled",
+      "notes": "当前用于兜底全市场行情和市场宽度统计。"
+    },
+    {
+      "id": "akshare_index_spot_sina",
+      "name": "AkShare 新浪指数行情",
+      "provider": "AkShare / 新浪",
+      "access_type": "python_function",
+      "entry": "akshare.stock_zh_index_spot_sina",
+      "params": [],
+      "outputs": ["data/raw/{trade_date}/akshare_index_spot_sina.json"],
+      "data": ["主要指数行情"],
+      "status": "enabled",
+      "notes": "用于补充指数环境。"
+    },
+    {
+      "id": "akshare_zt_pool",
+      "name": "AkShare 涨停池",
+      "provider": "AkShare / 东方财富",
+      "access_type": "python_function",
+      "entry": "akshare.stock_zt_pool_em",
+      "params": ["date"],
+      "outputs": ["data/raw/{trade_date}/akshare_zt_pool.json"],
+      "data": ["涨停池", "首次封板时间", "最后封板时间", "炸板次数", "连板数", "所属行业"],
+      "status": "enabled",
+      "notes": "当前网络下已验证可用。"
+    },
+    {
+      "id": "akshare_zt_pool_dtgc",
+      "name": "AkShare 跌停池",
+      "provider": "AkShare / 东方财富",
+      "access_type": "python_function",
+      "entry": "akshare.stock_zt_pool_dtgc_em",
+      "params": ["date"],
+      "outputs": ["data/raw/{trade_date}/akshare_zt_pool_dtgc.json"],
+      "data": ["跌停池", "连续跌停", "开板次数", "所属行业"],
+      "status": "enabled",
+      "notes": "按接口实际返回为准。"
+    },
+    {
+      "id": "eastmoney_industry_boards",
+      "name": "东方财富行业板块",
+      "provider": "东方财富",
+      "access_type": "http_json",
+      "entry": "https://push2.eastmoney.com/api/qt/clist/get",
+      "params": ["fs=m:90+t:2+f:!50"],
+      "outputs": ["data/raw/{trade_date}/eastmoney_industry_boards.json"],
+      "data": ["行业板块涨跌幅", "成交额", "主力净流入"],
+      "status": "unstable",
+      "notes": "当前网络下 push2 域名可能空回复，失败会写入 errors.json。"
+    },
+    {
+      "id": "eastmoney_concept_boards",
+      "name": "东方财富概念板块",
+      "provider": "东方财富",
+      "access_type": "http_json",
+      "entry": "https://push2.eastmoney.com/api/qt/clist/get",
+      "params": ["fs=m:90+t:3+f:!50"],
+      "outputs": ["data/raw/{trade_date}/eastmoney_concept_boards.json"],
+      "data": ["概念板块涨跌幅", "成交额", "主力净流入"],
+      "status": "unstable",
+      "notes": "当前网络下 push2 域名可能空回复，失败会写入 errors.json。"
+    },
+    {
+      "id": "market_sentiment",
+      "name": "市场情绪接口",
+      "provider": "待定",
+      "access_type": "todo",
+      "entry": "",
+      "params": ["trade_date"],
+      "outputs": ["data/processed/{trade_date}/market_sentiment.json"],
+      "data": ["情绪阶段", "连板高度", "炸板率", "短线赚钱效应"],
+      "status": "todo",
+      "notes": "下一步接入。"
+    }
+  ]
+}
+

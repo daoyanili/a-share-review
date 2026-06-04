@@ -1,0 +1,10 @@
+[Unit]
+Description=Run A-share review data collector on trading days
+
+[Timer]
+OnCalendar=Mon..Fri *-*-* 15:20:00
+Persistent=true
+Unit=a-share-review.service
+
+[Install]
+WantedBy=timers.target

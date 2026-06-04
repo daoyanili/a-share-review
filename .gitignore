@@ -1,0 +1,20 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.Python
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+logs/
+
+# Generated data
+data/raw/
+data/processed/
+data/reports/
+
+# Local secrets or tokens
+.env
+*.token
+config.local.json
